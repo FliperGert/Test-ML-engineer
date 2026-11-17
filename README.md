@@ -79,3 +79,30 @@ M[X] = 1/12 * (1+2+3) + 1/4 * (4+5+6) = 1/2 + 15/4 = 17/4 = 4.25
 Проверка другим способом: с вероятностью 1/2 первый бросок 4, 5 или 6 (в среднем 5), с вероятностью 1/2 бросаем заново (в среднем 3.5), итого 1/2 * 5 + 1/2 * 3.5 = 4.25.
 
 ---
+
+## Задача 3. SQL: зарплата сотрудников
+
+**Условие.** В базе три таблицы:
+- `Employee (empid, empname)`: ФИО сотрудников
+- `Employee_timesheet (empid, date, num_of_hours)`: сколько часов сотрудник отработал по дням
+- `Employee_hourly_rate (empid, hourly_rate)`: часовая ставка каждого сотрудника
+
+Нужно написать запрос, который считает зарплату каждого сотрудника по месяцам.
+
+**Идея.** Нужно посчитать зарплату каждого сотрудника за каждый месяц. Выводим `id` (вдруг есть совпадающие ФИО), ФИО, месяц и сумму: часы работы за день, умноженные на часовую ставку, просуммированные по месяцу. Группируем по id, ФИО и месяцу, затем сортируем по id и месяцу.
+
+```sql
+SELECT Employee.empid,
+       Employee.empname,
+       DATE_TRUNC('month', Employee_timesheet.date) AS month,
+       SUM(Employee_timesheet.num_of_hours * Employee_hourly_rate.hourly_rate) AS salary
+FROM Employee
+JOIN Employee_timesheet ON Employee_timesheet.empid = Employee.empid
+JOIN Employee_hourly_rate ON Employee_hourly_rate.empid = Employee.empid
+GROUP BY Employee.empid,
+         Employee.empname,
+         DATE_TRUNC('month', Employee_timesheet.date)
+ORDER BY Employee.empid, month;
+```
+
+> Запрос написан для PostgreSQL (функция `DATE_TRUNC`). В других СУБД функция усечения даты до месяца называется иначе.
